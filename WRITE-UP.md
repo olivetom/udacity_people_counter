@@ -6,17 +6,19 @@ Overview of my work.
 
 This project was very helpful to understand deep learning object detection using Intel OpenVINO Toolkit. I found it extremely helpful for accelerating the project development time.
 
-However, I should say that a marketable people counter app should deal with model accuracy by augmenting the plain detection with object tracking to avoid false negatives that increments the people count incorrectly. 
+Finally, I've made it by using a sliding window people counter, and using it with probability threshold gives the better results.
 
-Another option to avoid counting persons repeatedly for low confidence detectors or detectors where no instance detection is available is to use 
+However, I should say that a marketable people counter app should deal with model accuracy by augmenting the plain detection with object tracking to avoid false negatives that increments the people count incorrectly.
+
+Another option to avoid counting persons repeatedly for low confidence detectors or detectors where no instance detection is available is to use
 
 ​	a)  **skimage.metrics** the structural_similarity frame comparator in order to discard counting people from very similar frames.
 
 ​	b) **scipy.spatial.distance.cdist** to compare prediction boxes between N consecutive frames to discard repeated box counts in predictions.
 
-Although I tried to install scipy and skimage it in the workspace I didn't succeded.
+Although I tried to install scipy and skimage it in the workspace I didn't succeded because of the sandboxed python environment.
 
-Regarding model optimizer, I found the process of transforming models that were not pretrained by Intel quiet hard. I think that the app developer should have detailed knowledge of the model in order to convert it properly and successfully. Examples: 
+Regarding model optimizer, I found the process of transforming models that were not pretrained by Intel quiet hard. I think that the app developer should have detailed knowledge of the model in order to convert it properly and successfully. Examples:
 
 ​	a) faster_rcnn_resnet101_coco_2018_01_28 although converted successfully with model optimizer, it requires special case when handling input shape in the people counter python app. See MODELS.md for further details.
 
@@ -34,11 +36,20 @@ Mauricio
 
 1. Explain the process behind converting any custom layers. Explain the potential reasons for handling custom layers in a trained model.
 
-If a model have a layer/operation/operator not already implemented/supported in the Intel OpenVINO toolkit, then the developer has to provide implementation of the corresponding operator in order for the model optimizer to reference them as a layer that must be handled by a CPU and not by the FPGA, GPU, etc. In this way, Intel reassures that all models can be executed with Intel Accelerated Hardware with fallback to CPU if they have custom layers.
+If a model have a layer/operation/operator not already implemented/supported in the Intel OpenVINO toolkit, then the developer has to provide implementation of the corresponding operator in order for the model optimizer to reference them as a layer that must be handled by a CPU and not by the FPGA, GPU, etc. In this way, Intel reassures that all models can be executed with Intel Accelerated Hardware even if they have custom layers.
+
+The general process is:
+
+Step 1: Generate: Use the Model Extension Generator to generate the Custom Layer Template Files.
+
+Step 2: Edit: Edit the Custom Layer Template Files as necessary to create the specialized Custom Layer Extension Source Code.
+
+Step 3: Specify: Specify the custom layer extension locations to be used by the Model Optimizer or Inference Engine.
+
+For a more detailed description browse https://docs.openvinotoolkit.org/latest/_docs_HOWTO_Custom_Layers_Guide.html
 
 
-
-2. Run the pre-trained model without the use of the OpenVINO™ Toolkit. Compare the performance of the model with and without the use of the toolkit (size, speed, CPU overhead). What about differences in network needs and costs of using cloud services as opposed to at the edge? 
+2. Run the pre-trained model without the use of the OpenVINO™ Toolkit. Compare the performance of the model with and without the use of the toolkit (size, speed, CPU overhead). What about differences in network needs and costs of using cloud services as opposed to at the edge?
 
 When running the model without using the OpenVINO Toolkit, the size, speed and CPU overhead are worst because the OpenVINO toolkit includes the Model Optimizer that lowers size and processing overhead and increases inference speed of the transformed models.
 
@@ -46,8 +57,11 @@ When running the model without using the OpenVINO Toolkit, the size, speed and C
 
 3. Explain potential use cases of a people counter app, such as in retail applications. This is more than just listing the use cases - explain how they apply to the app, and how they might be useful.
 
-People counter applications are diverse and useful. It can be deployed in any computer vision edge device that requires counting of people, audience counting, entrance/exit of people (although it should be extended with object tracking).
+People counter applications are diverse and useful. It can be deployed in any edge device that requires counting of people,  audience counting, entrance/exit of people (although it would be nice extending it with object tracking).
 
+Use case #1: room people counter. Count people in the room. Report if max allowance for the room is reached.
+Use case #2:  entrance/exit counter. If extended with object tracking OpenVINO could report number of people entering/leaving through a door.
+Use case #3:  security camera people detector. Detect and alert when a person detected.
 
 
 4. Discuss lighting, model accuracy, and camera focal length/image size, and the effects these may have on an end user requirement.
@@ -64,7 +78,7 @@ Having that /opt/intel/openvino/deployment_tools/open_model_zoo/tools/accuracy_c
 
 Results I found:
 
-The difference between *model accuracy* pre- and post-conversion was almost null using FP32, 10% lower using FP16 and 0.5% lower using INT8. This implies, that edge applications for deep neural networks are possible. 
+The difference between *model accuracy* pre- and post-conversion was almost null using FP32, 10% lower using FP16 and 0.5% lower using INT8. This implies, that edge applications for deep neural networks are possible.
 
 
 
@@ -77,4 +91,3 @@ The *inference time* decreased between those of the model pre- and post-conversi
 
 
 Finally, I should say that significant model size and inference time reduction is accomplished by using Intel OpenVINO precision decreasing with a small penalty in accuracy. This is useful for deploying applications at the edge where much lower storage and computing power resources are available. Although, could be some circumstances where model complexity (parameters, gflops, custom operations) can adversely affect the throughput and must be carefully taken into consideration.
-
